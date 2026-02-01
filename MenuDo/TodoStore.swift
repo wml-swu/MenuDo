@@ -1,6 +1,6 @@
 //
 //  TodoStore.swift
-//  priority_list
+//  MenuDo
 //
 
 import SwiftUI
@@ -55,7 +55,7 @@ final class TodoStore {
         didSet { save() }
     }
 
-    private let key = "priority_list_todos"
+    private let key = "menudo_todos"
 
     init() {
         load()
@@ -72,6 +72,16 @@ final class TodoStore {
 
     func delete(_ item: TodoItem) {
         items.removeAll { $0.id == item.id }
+    }
+
+    func updateTitle(_ item: TodoItem, to newTitle: String) {
+        guard let i = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            items.remove(at: i)
+        } else {
+            items[i].title = trimmed
+        }
     }
 
     func add(title: String, quadrant: QuadrantType) {

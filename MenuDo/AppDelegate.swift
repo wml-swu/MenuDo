@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  priority_list
+//  MenuDo
 //
 //  菜单栏图标：左键显示窗口（与 MenuBarExtra 一致），右键显示「退出」菜单（位置与系统一致）
 //
@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.image = NSImage(systemSymbolName: "checkmark.square", accessibilityDescription: "Do it!")
+        statusItem?.button?.image = NSImage(systemSymbolName: "checkmark.square", accessibilityDescription: "MenuDo")
         statusItem?.button?.action = #selector(statusItemClicked)
         statusItem?.button?.target = self
         statusItem?.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         mainWindow?.contentView = hosting
         mainWindow?.isReleasedWhenClosed = false
-        mainWindow?.title = "Do it!"
+        mainWindow?.title = "MenuDo"
         // 禁止系统/用户对窗口缩放：固定内容尺寸，不可拖拽改变大小
         mainWindow?.contentMinSize = size
         mainWindow?.contentMaxSize = size
@@ -82,6 +82,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let y = screenRect.minY - gap - winSize.height
         window.setFrameOrigin(NSPoint(x: x, y: y))
         window.makeKeyAndOrderFront(nil)
+    }
+
+    /// 用户点击 Dock 图标时：把主窗口带到最前（或显示）
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showMainWindow()
+        return true
+    }
+
+    /// 应用被激活时（如 Cmd+Tab 切回）：若主窗口已显示则带到最前
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if mainWindow?.isVisible == true {
+            mainWindow?.makeKeyAndOrderFront(nil)
+        }
     }
 
     @objc private func quit() {

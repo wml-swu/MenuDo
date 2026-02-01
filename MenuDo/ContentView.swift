@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  priority_list
+//  MenuDo
 //
 //  Created by 大大怪将军 on 2026/2/1.
 //
@@ -10,7 +10,9 @@ import SwiftUI
 struct ContentView: View {
     @State private var store = TodoStore()
     @FocusState private var focusedQuadrant: QuadrantType?
+    @FocusState private var focusResignSink: Bool  // 点击其他区域时聚焦此处，使输入框/编辑框失焦并触发保存
     @State private var draftText: [QuadrantType: String] = [:]
+    @State private var editingItemId: UUID?
 
     /// 每个象限为固定正方形，尺寸对应 macOS 桌面插件最大尺寸（systemLarge 约 329×345 pt，取 345 pt 作为正方形边长）
     private static let quadrantSize: CGFloat = 345
@@ -50,10 +52,18 @@ struct ContentView: View {
             Color(white: 0.1)
                 .ignoresSafeArea()
 
+            // 不可见的焦点承接视图：点击其他区域时聚焦此处，让输入框/编辑框失焦
+            Color.clear
+                .frame(width: 1, height: 1)
+                .focusable()
+                .focused($focusResignSink, equals: true)
+                .focusEffectDisabled()  // 不显示蓝色焦点环
+                .allowsHitTesting(false)
+
             VStack(spacing: 0) {
                 // 顶部栏
                 HStack {
-                    Text("Do it!")
+                    Text("MenuDo")
                         .font(.title.bold())
                     Spacer()
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
@@ -74,13 +84,20 @@ struct ContentView: View {
                             size: Self.quadrantSize,
                             quadrant: quadrant,
                             tasks: store.tasks(for: quadrant),
+                            editingItemId: $editingItemId,
                             onToggle: { store.toggleCompletion($0) },
-                            onDelete: { store.delete($0) }
+                            onDelete: { store.delete($0) },
+                            onEdit: { item, newTitle in
+                                store.updateTitle(item, to: newTitle)
+                                editingItemId = nil
+                            }
                         ) {
-                            TextField("添加任务…", text: binding(for: quadrant))
+                            TextField("添加任务…", text: binding(for: quadrant), axis: .vertical)
                                 .textFieldStyle(.plain)
+                                .lineLimit(2...8)
                                 .focused($focusedQuadrant, equals: Optional(quadrant))
                                 .onSubmit { saveDraftAndResignFocus(quadrant: quadrant) }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
                                 .background(Color(white: 0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -94,7 +111,8 @@ struct ContentView: View {
         .contentShape(Rectangle())
         .simultaneousGesture(
             TapGesture().onEnded { _ in
-                if focusedQuadrant != nil { focusedQuadrant = nil }
+                // 将焦点移到“沉没”视图，输入框/编辑框会失焦，onChange 会触发保存
+                focusResignSink = true
             }
         )
         .onChange(of: focusedQuadrant) { oldValue, newValue in
@@ -116,8 +134,10 @@ private struct QuadrantCard<AddField: View>: View {
     let size: CGFloat
     let quadrant: QuadrantType
     let tasks: [TodoItem]
+    @Binding var editingItemId: UUID?
     let onToggle: (TodoItem) -> Void
     let onDelete: (TodoItem) -> Void
+    let onEdit: (TodoItem, String) -> Void
     @ViewBuilder let addTaskField: () -> AddField
 
     var body: some View {
@@ -139,12 +159,16 @@ private struct QuadrantCard<AddField: View>: View {
                     ForEach(tasks) { item in
                         TaskRowView(
                             item: item,
+                            isEditing: editingItemId == item.id,
                             onToggle: { onToggle(item) },
-                            onDelete: { onDelete(item) }
+                            onDelete: { onDelete(item) },
+                            onStartEdit: { editingItemId = item.id },
+                            onCommitEdit: { newTitle in onEdit(item, newTitle) }
                         )
                     }
                     addTaskField()
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxHeight: .infinity)
         }
@@ -157,8 +181,14 @@ private struct QuadrantCard<AddField: View>: View {
 // MARK: - 单条任务行
 private struct TaskRowView: View {
     let item: TodoItem
+    let isEditing: Bool
     let onToggle: () -> Void
     let onDelete: () -> Void
+    let onStartEdit: () -> Void
+    let onCommitEdit: (String) -> Void
+
+    @State private var editText: String = ""
+    @FocusState private var isEditFocused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -168,13 +198,26 @@ private struct TaskRowView: View {
                     .foregroundStyle(item.isCompleted ? .secondary : .primary)
             }
             .buttonStyle(.plain)
+            .disabled(isEditing)
 
-            Text(item.title)
-                .font(.subheadline)
-                .strikethrough(item.isCompleted, color: .secondary)
-                .foregroundStyle(item.isCompleted ? .secondary : .primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .multilineTextAlignment(.leading)
+            if isEditing {
+                TextField("任务内容", text: $editText, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.subheadline)
+                    .lineLimit(2...8)
+                    .focused($isEditFocused)
+                    .onSubmit { onCommitEdit(editText) }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text(item.title)
+                    .font(.subheadline)
+                    .strikethrough(item.isCompleted, color: .secondary)
+                    .foregroundStyle(item.isCompleted ? .secondary : .primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture { onStartEdit() }
+            }
 
             Button(action: onDelete) {
                 Image(systemName: "xmark")
@@ -182,10 +225,22 @@ private struct TaskRowView: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .disabled(isEditing)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(Color(white: 0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .onChange(of: isEditing) { _, newValue in
+            if newValue {
+                editText = item.title
+                isEditFocused = true
+            }
+        }
+        .onChange(of: isEditFocused) { _, newValue in
+            if !newValue && isEditing {
+                onCommitEdit(editText)
+            }
+        }
     }
 }
 

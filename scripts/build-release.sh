@@ -4,8 +4,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-SCHEME="priority_list"
-ARCHIVE_NAME="priority_list.xcarchive"
+SCHEME="MenuDo"
+ARCHIVE_NAME="MenuDo.xcarchive"
 EXPORT_DIR="$PROJECT_DIR/build/Release"
 ZIP_NAME="Do-it-Release.zip"
 
@@ -25,7 +25,7 @@ xcodebuild -exportArchive \
   -exportPath "$EXPORT_DIR" \
   -exportOptionsPlist "$SCRIPT_DIR/ExportOptions.plist"
 
-APP_PATH="$EXPORT_DIR/priority_list.app"
+APP_PATH="$EXPORT_DIR/MenuDo.app"
 if [[ ! -d "$APP_PATH" ]]; then
   echo "错误：未找到 $APP_PATH"
   exit 1
@@ -33,13 +33,13 @@ fi
 
 echo "→ 打包为 $ZIP_NAME ..."
 cd "$EXPORT_DIR"
-zip -r -y "$PROJECT_DIR/$ZIP_NAME" "priority_list.app"
+zip -r -y "$PROJECT_DIR/$ZIP_NAME" "MenuDo.app"
 cd "$PROJECT_DIR"
 
 echo ""
 echo "完成。用户可直接使用："
 echo "  1. 解压 $ZIP_NAME"
-echo "  2. 将 priority_list.app 拖到「应用程序」"
-echo "  3. 从菜单栏或启动台打开 Do it!"
+echo "  2. 将 MenuDo.app 拖到「应用程序」"
+echo "  3. 从菜单栏或启动台打开 MenuDo"
 echo ""
 echo "输出文件: $PROJECT_DIR/$ZIP_NAME"
