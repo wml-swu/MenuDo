@@ -1,6 +1,6 @@
 //
-//  priority_listApp.swift
-//  priority_list
+//  MenuDoApp.swift
+//  MenuDo
 //
 //  Created by 大大怪将军 on 2026/2/1.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct priority_listApp: App {
+struct MenuDoApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

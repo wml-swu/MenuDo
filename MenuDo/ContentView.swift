@@ -57,6 +57,7 @@ struct ContentView: View {
                 .frame(width: 1, height: 1)
                 .focusable()
                 .focused($focusResignSink, equals: true)
+                .focusEffectDisabled()  // 不显示蓝色焦点环
                 .allowsHitTesting(false)
 
             VStack(spacing: 0) {

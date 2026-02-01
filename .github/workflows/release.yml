@@ -29,34 +29,34 @@ jobs:
           CODE_SIGNING_ALLOWED: "NO"
           DEVELOPMENT_TEAM: ""
         run: |
-          xcodebuild -scheme priority_list \
+          xcodebuild -scheme MenuDo \
             -configuration Release \
             -destination 'generic/platform=macOS' \
-            -archivePath "$PWD/build/priority_list.xcarchive" \
+            -archivePath "$PWD/build/MenuDo.xcarchive" \
             clean archive
 
       - name: Export .app
         run: |
           xcodebuild -exportArchive \
-            -archivePath "$PWD/build/priority_list.xcarchive" \
+            -archivePath "$PWD/build/MenuDo.xcarchive" \
             -exportPath "$PWD/build/Release" \
             -exportOptionsPlist "$PWD/scripts/ExportOptions.plist"
 
       - name: Zip app
         run: |
           cd build/Release
-          zip -r -y "$GITHUB_WORKSPACE/Do-it-Release.zip" priority_list.app
+          zip -r -y "$GITHUB_WORKSPACE/MenuDo-Release.zip" MenuDo.app
 
       - name: Create Release and Upload
         uses: softprops/action-gh-release@v2
         with:
-          files: Do-it-Release.zip
+          files: MenuDo-Release.zip
           generate_release_notes: false
           body: |
             ## 直接下载使用（无需 Xcode）
-            1. 下载 **Do-it-Release.zip**
-            2. 解压得到 `priority_list.app`
+            1. 下载 **MenuDo-Release.zip**
+            2. 解压得到 `MenuDo.app`
             3. 拖到「应用程序」文件夹
-            4. 从菜单栏右侧点击 Do it! 图标即可使用
+            4. 从菜单栏右侧点击 MenuDo 图标即可使用
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

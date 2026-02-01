@@ -84,6 +84,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
+    /// 用户点击 Dock 图标时：把主窗口带到最前（或显示）
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showMainWindow()
+        return true
+    }
+
+    /// 应用被激活时（如 Cmd+Tab 切回）：若主窗口已显示则带到最前
+    func applicationDidBecomeActive(_ notification: Notification) {
+        if mainWindow?.isVisible == true {
+            mainWindow?.makeKeyAndOrderFront(nil)
+        }
+    }
+
     @objc private func quit() {
         NSApplication.shared.terminate(nil)
     }
