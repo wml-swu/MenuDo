@@ -67,29 +67,27 @@ struct ContentView: View {
                 .padding(.vertical, 12)
                 .background(.ultraThinMaterial)
 
-                // 四象限网格（固定正方形，尺寸同 macOS 桌面小插件）
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: Self.gridSpacing) {
-                        ForEach(QuadrantType.allCases, id: \.self) { quadrant in
-                            QuadrantCard(
-                                size: Self.quadrantSize,
-                                quadrant: quadrant,
-                                tasks: store.tasks(for: quadrant),
-                                onToggle: { store.toggleCompletion($0) },
-                                onDelete: { store.delete($0) }
-                            ) {
-                                TextField("添加任务…", text: binding(for: quadrant))
-                                    .textFieldStyle(.plain)
-                                    .focused($focusedQuadrant, equals: Optional(quadrant))
-                                    .onSubmit { saveDraftAndResignFocus(quadrant: quadrant) }
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 8)
-                                    .background(Color(white: 0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            }
+                // 四象限网格固定不滚动，仅象限内任务列表可滚动（鼠标在哪个象限就滚哪个）
+                LazyVGrid(columns: columns, spacing: Self.gridSpacing) {
+                    ForEach(QuadrantType.allCases, id: \.self) { quadrant in
+                        QuadrantCard(
+                            size: Self.quadrantSize,
+                            quadrant: quadrant,
+                            tasks: store.tasks(for: quadrant),
+                            onToggle: { store.toggleCompletion($0) },
+                            onDelete: { store.delete($0) }
+                        ) {
+                            TextField("添加任务…", text: binding(for: quadrant))
+                                .textFieldStyle(.plain)
+                                .focused($focusedQuadrant, equals: Optional(quadrant))
+                                .onSubmit { saveDraftAndResignFocus(quadrant: quadrant) }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                                .background(Color(white: 0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
                     }
-                    .padding(16)
                 }
+                .padding(16)
                 .frame(minWidth: ContentView.quadrantSize * 2 + ContentView.gridSpacing + 32)
             }
         }
