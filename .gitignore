@@ -1,0 +1,13 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/
+
+# Release 产物（按需保留或提交）
+*.zip
+*.dmg
+
+# macOS
+.DS_Store
